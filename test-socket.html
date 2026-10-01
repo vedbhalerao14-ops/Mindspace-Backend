@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html>
+<body>
+  <h3>MindSpace Socket Test</h3>
+  <p>Token: <input id="token" size="60" placeholder="paste user token"></p>
+  <p>Community ID: <input id="cid" size="40" placeholder="paste community _id"></p>
+  <button onclick="connectSocket()">1. Connect</button>
+  <button onclick="join()">2. Join</button>
+  <p><input id="msg" placeholder="type a message"> <button onclick="send()">3. Send</button></p>
+  <pre id="log"></pre>
+
+  <script src="http://localhost:3000/socket.io/socket.io.js"></script>
+  <script>
+    let socket;
+    const log = (t) => (document.getElementById("log").textContent += t + "\n");
+
+    function connectSocket() {
+      socket = io("http://localhost:3000", {
+        auth: { token: document.getElementById("token").value.trim() },
+      });
+      socket.on("connect", () => log("Connected"));
+            socket.onAny((event, ...args) => log("event received: " + event + " " + JSON.stringify(args)));
+      socket.on("connect_error", (e) => log("Error: " + e.message));
+      socket.on("joined", (m) => log("joined: " + m));
+      socket.on("notice", (m) => log("notice: " + m));
+      socket.on("errorMessage", (m) => log("errorMessage: " + m));
+      socket.on("newMessage", (m) => log("newMessage: " + m.sender + ": " + m.text));
+    }
+    function join() {
+      log("Clicked Join, id = " + document.getElementById("cid").value.trim());
+      socket.emit("joinCommunity", document.getElementById("cid").value.trim());
+    }
+    function send() {
+      log("Clicked Send");
+      socket.emit("sendMessage", {
+        communityId: document.getElementById("cid").value.trim(),
+        text: document.getElementById("msg").value,
+      });
+    }
+  </script>
+</body>
+</html>
